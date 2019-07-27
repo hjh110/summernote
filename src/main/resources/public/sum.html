@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Summernote</title>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css" rel="stylesheet">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css" rel="stylesheet">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.js"></script>
+
+
+</head>
+<body>
+      <tr class="">
+                      <td>沟通内容：</td>
+                      <td><textarea class="form-control" id="summernote" name="content"  cols="60" rows="10"></textarea> </td>
+            </tr>
+
+<img src="http://localhost:8086//upload/2019-07-27//1564218989772.jpg" alt="实验" id="shiy">
+
+<script type="text/javascript">
+    $(function(){
+        $('#summernote').summernote({
+            height: 300, //定义初始高度
+            lang: 'zh-CN', // default: 'en-US'
+            focus:true,
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
+                ['insert', ['picture', 'video']]
+            ],
+            callbacks: {
+                onImageUpload: function(files, editor, $editable) {
+                    sendFile(files[0],editor,$editable);
+                }
+            }
+
+        });
+
+        function sendFile(file, editor, $editable){
+            var filename = false;
+            try{
+                filename = file['name'];
+            } catch(e){
+                filename = false;
+            }
+            if(!filename){$(".note-alarm").remove();}
+            //以上防止在图片在编辑器内拖拽引发第二次上传导致的提示错误
+            var ext = filename.substr(filename.lastIndexOf("."));
+            ext = ext.toUpperCase();// 验证图片类型
+            var timestamp = new Date().getTime();
+            var name = timestamp+"_"+$("#summernote").attr('aid')+ext;
+            //name是文件名，自己随意定义，aid是我自己增加的属性用于区分文件用户
+            data = new FormData();
+            data.append("file", file);
+            data.append("key",filename);
+            data.append("token",$("#summernote").attr('token'));
+            data.append("id","1");
+
+
+            // console.log(${pageContext.request.contextPath}/admin/customerRecord_upload.do)
+            $.ajax({
+                data: data,
+                type: "POST",
+                url: "customerRecord_upload", //图片上传出来的url，返回的是图片上传后的路径，http格式
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function (data) {
+                    var path = data.data;
+                    $('#summernote').summernote('insertImage', path, filename);
+                    $("img").addClass("img-responsive center-block");
+                },
+                error: function () {
+                    alert("上传失败！");
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
